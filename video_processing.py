@@ -51,7 +51,7 @@ class VideoProcessing:
                 '-ss', f'00:00:{offset:0>4.1f}', 
                 '-t', f'00:00:{run_time:0>4.1f}', 
                 '-i', self._filename, 
-                '-acodec copy',
+                '-acodec', 'libmp3lame',
                 '-af', args,
                 audio_filename
             )
@@ -62,7 +62,7 @@ class VideoProcessing:
                 '-ss', f'00:00:{offset:0>4.1f}', 
                 '-t', f'00:00:{run_time:0>4.1f}', 
                 '-i', self._filename, 
-                '-acodec', 'copy',
+                '-acodec', 'libmp3lame',
                 audio_filename
             )
 
@@ -75,7 +75,7 @@ class VideoProcessing:
             concat_pipline.extend([silence, audio])
         str_pipline = '|'.join(concat_pipline)
         await self._async_shell_command(
-            'ffmpeg','-y' ,'-i', f'concat:{str_pipline}', '-acodec', 'copy', audio_filename
+            'ffmpeg','-y' ,'-i', f'concat:{str_pipline}', '-acodec', 'libmp3lame', audio_filename
         )
         return audio_filename
     
@@ -86,11 +86,11 @@ class VideoProcessing:
             '-y', 
             '-i', self.video_file_path,
             '-i', audio_filename,
-            '-c:v copy',
+            '-c:v', 'copy',
             '-filter_complex', '[0:a]aformat=fltp:44100:stereo,apad[0a];[1]aformat=fltp:44100:stereo,volume=0.7[1a];[0a][1a]amerge[a]',
             '-map', '0:v',
             '-map','[a]',
-            f'{filename}'
+            filename
         )
         return filename
 
@@ -115,7 +115,7 @@ class YodaVideoProcessing(VideoProcessing):
     async def pipeline(self) -> str:
         music1 = await self._cut_audio(0, 4.5)
         music2 = await self._cut_audio(4.5, 4.5)
-        music3 = await self._cut_audio(9.0, 2.0)
+        music3 = await self._cut_audio(9.0, 2.0, args="firequalizer=gain_entry='entry(0,30);entry(250,40)")
         music_concat = await self._concat_audio([music1, music2, music3], [self.silince_filenames[0], self.silince_filenames[1], self.silince_filenames[0], self.silince_filenames[2]])
         return await self._generate_video(music_concat)
 

@@ -1,10 +1,12 @@
+import os
 from aiogram import Bot, types
 from aiogram.dispatcher import Dispatcher
 from aiogram.utils import executor
 from aiohttp import BasicAuth
 import aiogram.types
 import uuid
-from config import TOKEN
+from video_processing import YodaVideoProcessing
+from config import TOKEN, DESTINATION_USER_AUDIO
 
 
 PROXY_AUTH = BasicAuth(login='hrgsaMsTL4', password='w0ezUpFXuW')
@@ -23,12 +25,15 @@ async def process_help_command(message: types.Message):
 
 @dp.message_handler(content_types=types.ContentTypes.AUDIO)
 async def process_audio(message: types.Message):
-    filename = uuid.uuid4().hex
-    await message.audio.download(destination=f'files/{filename}.mp3')
+    filename = uuid.uuid4().hex + '.mp3'
+    destination = DESTINATION_USER_AUDIO + filename
+    await bot.send_message(message.from_user.id, 'Видео обрабатывается...')
+    await message.audio.download(destination=destination)
+    yvp = YodaVideoProcessing(destination)
 
-@dp.message_handler()
-async def echo_message(msg: types.Message):
-    await bot.send_message(msg.from_user.id, msg.text)
+    output_path = await yvp.pipeline()
+    with open(output_path, 'rb') as video:
+        await bot.send_video(message.from_user.id, video)
 
 
 if __name__ == '__main__':
