@@ -28,6 +28,9 @@ class VideoProcessing:
         os.mkdir(cache_dir_name + '/' + filename)
         return cache_dir_name + '/' + filename
 
+    @staticmethod
+    def _is_file_exist(filename):
+        return os.path.isfile(filename)
 
     def _get_full_path(self, filename: str) -> str:
         return os.getcwd() + '/' + self.cache_path + '/' + filename
@@ -65,7 +68,8 @@ class VideoProcessing:
                 '-acodec', 'libmp3lame',
                 audio_filename
             )
-
+        if not self._is_file_exist(audio_filename):
+            raise FfmpegError('File not exist: ' + audio_filename)
         return audio_filename
 
     async def _concat_audio(self, audio_filenames: list, silences_filenames: list) -> str:
@@ -77,6 +81,8 @@ class VideoProcessing:
         await self._async_shell_command(
             'ffmpeg','-y' ,'-i', f'concat:{str_pipline}', '-acodec', 'libmp3lame', audio_filename
         )
+        if not self._is_file_exist(audio_filename):
+            raise FfmpegError('File not exist: ' + audio_filename)
         return audio_filename
     
     async def _generate_video(self, audio_filename: str) -> str:
@@ -92,6 +98,8 @@ class VideoProcessing:
             '-map','[a]',
             filename
         )
+        if not self._is_file_exist(filename):
+            raise FfmpegError('File not exist: ' + filename)
         return filename
 
     def pipeline(self) -> str:
