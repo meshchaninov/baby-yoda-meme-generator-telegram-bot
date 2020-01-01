@@ -123,7 +123,7 @@ class YodaVideoProcessing(VideoProcessing):
     async def pipeline(self) -> str:
         music1 = await self._cut_audio(0, 4.5)
         music2 = await self._cut_audio(4.5, 4.5)
-        music3 = await self._cut_audio(9.0, 2.0, args="firequalizer=gain_entry='entry(0,30);entry(250,40)")
+        music3 = await self._cut_audio(9.0, 2.0, args="firequalizer=gain_entry='entry(31,15);entry(63,15);entry(87,15);entry(125,15);entry(4000,15);entry(8000,15);entry(16000,15)")
         music_concat = await self._concat_audio([music1, music2, music3], [self.silince_filenames[0], self.silince_filenames[1], self.silince_filenames[0], self.silince_filenames[2]])
         return await self._generate_video(music_concat)
 

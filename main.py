@@ -29,11 +29,11 @@ async def process_audio(message: types.Message):
     destination = DESTINATION_USER_AUDIO + filename
     await bot.send_message(message.from_user.id, 'Видео обрабатывается...')
     await message.audio.download(destination=destination)
-    yvp = YodaVideoProcessing(destination)
-
-    output_path = await yvp.pipeline()
-    with open(output_path, 'rb') as video:
-        await bot.send_video(message.from_user.id, video)
+    async with YodaVideoProcessing(destination) as yvp:
+        output_path = await yvp.pipeline()
+        with open(output_path, 'rb') as video:
+            await bot.send_video(message.from_user.id, video)
+    os.remove(destination)
 
 
 if __name__ == '__main__':
