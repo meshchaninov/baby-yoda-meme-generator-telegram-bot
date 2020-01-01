@@ -5,10 +5,6 @@ WORKDIR /app
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
-COPY env /app/env
-
-RUN source /app/env
-
 RUN apk update \
     && apk add --virtual build-deps gcc python3-dev musl-dev
 
