@@ -2,6 +2,7 @@ import asyncio
 import uuid
 import os
 import logging
+import shutil
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -19,14 +20,14 @@ class VideoProcessing:
     def __init__(self, audio_filename: str, video_file_path: str, cache: str):
         self._filename = audio_filename
         self.video_file_path = video_file_path
-        self.cache = cache
-        self.cache_path = cache
+        self.cache_path = self._create_cache(cache)
+        self.files = []
 
-    @logging_function
-    def _create_cache(self):
+    @staticmethod
+    def _create_cache(cache_dir_name: str):
         filename = uuid.uuid4().hex
-        os.mkdir(self.cache + '/' + filename)
-        self.cache_path = self.cache + '/' + filename
+        os.mkdir(cache_dir_name + '/' + filename)
+        return cache_dir_name + '/' + filename
 
 
     def _get_full_path(self, filename: str) -> str:
@@ -103,11 +104,11 @@ class VideoProcessing:
 
     @logging_function
     async def __aenter__(self):
-        return await self.pipeline()
+        return self
 
     @logging_function
     async def __aexit__(self, exc_type, exc, tb):
-        os.remove(self.cache_path)
+        shutil.rmtree(self.cache_path)
 
 
 class YodaVideoProcessing(VideoProcessing):
