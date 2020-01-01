@@ -25,15 +25,16 @@ else:
     bot = Bot(token=TOKEN)
 dp = Dispatcher(bot)
 
+GREETINGS = "Привет! Отправь мне музыкальный файл в формате mp3, и я из него сделаю видео-мем с маленьким йодой из сериала Мандалорец (P.S. находится пока в стадии бета!)"
 
 @dp.message_handler(commands=['start'])
 async def process_start_command(message: types.Message):
-    await message.reply("Привет!\nНапиши мне что-нибудь!")
+    await message.reply(GREETINGS)
 
 
 @dp.message_handler(commands=['help'])
 async def process_help_command(message: types.Message):
-    await message.reply("Напиши мне что-нибудь, и я отпрпавлю этот текст тебе в ответ!")
+    await message.reply(GREETINGS)
 
 @dp.message_handler(content_types=types.ContentTypes.AUDIO)
 async def process_audio(message: types.Message):
