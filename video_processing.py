@@ -35,10 +35,7 @@ class VideoProcessing:
     @staticmethod
     @logging_function
     async def _async_shell_command(program, *args):
-        new_args = []
-        for elem in args:
-            new_args.extend(elem.split(' '))
-        process = await asyncio.create_subprocess_exec(program, *new_args, stderr=asyncio.subprocess.PIPE)
+        process = await asyncio.create_subprocess_exec(program, *args, stderr=asyncio.subprocess.PIPE)
         stdout, stderr = await process.communicate()
         if stdout:
             logger.info(stdout.decode().strip())
@@ -51,22 +48,22 @@ class VideoProcessing:
             await self._async_shell_command(
                 'ffmpeg', 
                 '-y', 
-                f'-ss 00:00:{offset:0>4.1f}', 
-                f'-t 00:00:{run_time:0>4.1f}', 
-                f'-i {self._filename}', 
+                '-ss', f'00:00:{offset:0>4.1f}', 
+                '-t', f'00:00:{run_time:0>4.1f}', 
+                '-i', self._filename, 
                 '-acodec copy',
-                f'-af {args}'
-                f'{audio_filename}'
+                '-af', args,
+                audio_filename
             )
         else:
             await self._async_shell_command(
                 'ffmpeg', 
                 '-y', 
-                f'-ss 00:00:{offset:0>4.1f}', 
-                f'-t 00:00:{run_time:0>4.1f}', 
-                f'-i {self._filename}', 
-                '-acodec copy',
-                f'{audio_filename}'
+                '-ss', f'00:00:{offset:0>4.1f}', 
+                '-t', f'00:00:{run_time:0>4.1f}', 
+                '-i', self._filename, 
+                '-acodec', 'copy',
+                audio_filename
             )
 
         return audio_filename
@@ -78,7 +75,7 @@ class VideoProcessing:
             concat_pipline.extend([silence, audio])
         str_pipline = '|'.join(concat_pipline)
         await self._async_shell_command(
-            'ffmpeg','-y' ,'-i', f'concat:{str_pipline}', '-acodec copy', f'{audio_filename}'
+            'ffmpeg','-y' ,'-i', f'concat:{str_pipline}', '-acodec', 'copy', audio_filename
         )
         return audio_filename
     
@@ -87,11 +84,11 @@ class VideoProcessing:
         await self._async_shell_command(
             'ffmpeg',
             '-y', 
-            f'-i {self.video_file_path}',
-            f'-i {audio_filename}',
+            '-i', self.video_file_path,
+            '-i', audio_filename,
             '-c:v copy',
             '-filter_complex', '[0:a]aformat=fltp:44100:stereo,apad[0a];[1]aformat=fltp:44100:stereo,volume=0.7[1a];[0a][1a]amerge[a]',
-            '-map 0:v',
+            '-map', '0:v',
             '-map','[a]',
             f'{filename}'
         )
