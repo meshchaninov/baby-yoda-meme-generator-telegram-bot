@@ -1,15 +1,14 @@
 import asyncio
 import uuid
 import os
-import logging
 import shutil
+from utils.logger import get_logger
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger = get_logger(__name__)
 
 def logging_function(func):
     async def get_arguments(*args, **kwargs):
-        logger.info(f'func_name={func.__name__}, args={args}, kwargs={kwargs}')
+        logger.info(f'{func.__name__}: args={args}, kwargs={kwargs}')
         return await func(*args, **kwargs)
     return get_arguments
 
@@ -34,17 +33,18 @@ class VideoProcessing:
         return os.getcwd() + '/' + self.cache_path + '/' + filename
 
     @staticmethod
+    @logging_function
     async def _async_shell_command(program, *args):
         new_args = []
         for elem in args:
             new_args.extend(elem.split(' '))
-        process = await asyncio.create_subprocess_exec(program, *new_args, stdout=asyncio.subprocess.PIPE)
+        process = await asyncio.create_subprocess_exec(program, *new_args, stderr=asyncio.subprocess.PIPE)
         stdout, stderr = await process.communicate()
-        # Return stdout
-        if stdout.decode().strip():
-            raise FfmpegError()
+        if stdout:
+            logger.info(stdout.decode().strip())
+        if stderr:
+            logger.info(stderr.decode().strip())
         
-    @logging_function
     async def _cut_audio(self, offset: float, run_time: float, args: str or None = None) -> str:
         audio_filename = self._get_full_path(uuid.uuid4().hex + '.mp3')
         if args:
@@ -71,7 +71,6 @@ class VideoProcessing:
 
         return audio_filename
 
-    @logging_function
     async def _concat_audio(self, audio_filenames: list, silences_filenames: list) -> str:
         audio_filename = self._get_full_path(uuid.uuid4().hex + '.mp3')
         concat_pipline = []
@@ -83,7 +82,6 @@ class VideoProcessing:
         )
         return audio_filename
     
-    @logging_function
     async def _generate_video(self, audio_filename: str) -> str:
         filename = self._get_full_path(uuid.uuid4().hex + '.mp4')
         await self._async_shell_command(
@@ -102,11 +100,9 @@ class VideoProcessing:
     def pipeline(self) -> str:
         raise NotImplementedError()
 
-    @logging_function
     async def __aenter__(self):
         return self
 
-    @logging_function
     async def __aexit__(self, exc_type, exc, tb):
         shutil.rmtree(self.cache_path)
 
@@ -119,7 +115,6 @@ class YodaVideoProcessing(VideoProcessing):
     def __init__(self, audio_filename):
         super().__init__(audio_filename, self.video_file_path, self.cache)
 
-    @logging_function
     async def pipeline(self) -> str:
         music1 = await self._cut_audio(0, 4.5)
         music2 = await self._cut_audio(4.5, 4.5)
@@ -129,8 +124,8 @@ class YodaVideoProcessing(VideoProcessing):
 
 
 async def main():
-    async with YodaVideoProcessing('files/audio/user/music.mp3') as yvp:
-        print(await yvp.pipeline())
+    yvp = YodaVideoProcessing('files/audio/user/music.mp3')
+    print(await yvp.pipeline())
 
 
 if __name__ == "__main__":
