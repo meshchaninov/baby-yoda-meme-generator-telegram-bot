@@ -6,5 +6,4 @@ services:
     command: python /app/src/main.py
     expose:
       - 80
-    env_file: env
     restart: always
