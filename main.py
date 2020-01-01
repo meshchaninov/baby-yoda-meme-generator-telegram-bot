@@ -6,11 +6,23 @@ from aiohttp import BasicAuth
 import aiogram.types
 import uuid
 from video_processing import YodaVideoProcessing
-from config import TOKEN, DESTINATION_USER_AUDIO
 
+PROXY_LOGIN=os.getenv('PROXY_LOGIN')
+PROXY_PASS=os.getenv('PROXY_PASS')
+PROXY_URL=os.getenv('PROXY_URL')
+TOKEN=os.environ['TOKEN']
+BASE_DIR = os.getcwd()
+DESTINATION_USER_AUDIO = BASE_DIR + '/files/audio/user/'
 
-PROXY_AUTH = BasicAuth(login='hrgsaMsTL4', password='w0ezUpFXuW')
-bot = Bot(token=TOKEN, proxy='http://45.158.45.120:48608', proxy_auth=PROXY_AUTH)
+if PROXY_LOGIN and PROXY_PASS:
+    PROXY_AUTH = BasicAuth(login=PROXY_LOGIN, password=PROXY_PASS)
+else:
+    PROXY_AUTH = None
+
+if PROXY_URL:
+    bot = Bot(token=TOKEN, proxy=PROXY_URL, proxy_auth=PROXY_AUTH)
+else:
+    bot = Bot(token=TOKEN)
 dp = Dispatcher(bot)
 
 

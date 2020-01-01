@@ -1,9 +1,10 @@
 import logging
 import sys
+import os
 from logging.handlers import TimedRotatingFileHandler
 
 FORMATTER = logging.Formatter("%(asctime)s — %(name)s — %(levelname)s — %(message)s")
-LOG_FILE = "my_app.log"
+LOG_FILE = "my_app.log" if not os.getenv('LOG_FILE') else os.getenv('LOG_FILE')
 
 def get_console_handler():
    console_handler = logging.StreamHandler(sys.stdout)
