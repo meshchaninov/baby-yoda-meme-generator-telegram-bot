@@ -6,7 +6,7 @@ from aiohttp import BasicAuth
 from aiohttp import web
 import aiogram.types
 import uuid
-from aiogram.utils import context
+from aiogram.utils.executor import start_webhook
 from aiogram.dispatcher.webhook import get_new_configured_app
 from video_processing import YodaVideoProcessing
 
@@ -60,14 +60,32 @@ async def process_audio(message: types.Message):
     except Exception as e:
         await bot.send_message(message.from_user.id, f'🤒 соррии что-то пошло не так, вышлите это админу: {e}')
 
-async def on_startup(app):
-    """Simple hook for aiohttp application which manages webhook"""
-    await bot.delete_webhook()
+async def on_startup(dp):
     await bot.set_webhook(WEBHOOK_URL)
+    # insert code here to run it after start
+
+
+async def on_shutdown(dp):
+
+    # insert code here to run it before shutdown
+
+    # Remove webhook (not acceptable in some cases)
+    await bot.delete_webhook()
+
+    # Close DB connection (if used)
+    await dp.storage.close()
+    await dp.storage.wait_closed()
+
 
 if __name__ == '__main__':
-    app = get_new_configured_app(dispatcher=dp, path=WEBHOOK_URL_PATH)
-    app.on_startup.append(on_startup)
-    dp.loop.set_task_factory(context.task_factory)
-    web.run_app(app, host='0.0.0.0', port=os.getenv('PORT'))  # Heroku stores port you have to listen in your app
+    start_webhook(
+        dispatcher=dp,
+        webhook_path=WEBHOOK_URL,
+        on_startup=on_startup,
+        on_shutdown=on_shutdown,
+        skip_updates=True,
+        host='0.0.0.0',
+        port=os.getenv('PORT'),
+    )
+
     # executor.start_polling(dp)
