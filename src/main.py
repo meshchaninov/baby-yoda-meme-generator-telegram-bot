@@ -3,8 +3,11 @@ from aiogram import Bot, types
 from aiogram.dispatcher import Dispatcher
 from aiogram.utils import executor
 from aiohttp import BasicAuth
+from aiohttp import web
 import aiogram.types
 import uuid
+from aiogram.utils import context
+from aiogram.dispatcher.webhook import get_new_configured_app
 from video_processing import YodaVideoProcessing
 
 PROXY_LOGIN=os.getenv('PROXY_LOGIN')
@@ -25,6 +28,12 @@ else:
     bot = Bot(token=TOKEN)
 dp = Dispatcher(bot)
 
+PROJECT_NAME = os.environ['PROJECT_NAME']  # Set it as you've set TOKEN env var
+
+WEBHOOK_HOST = f'https://{PROJECT_NAME}.herokuapp.com'  # Enter here your link from Heroku project settings
+WEBHOOK_URL_PATH = '/webhook/' + TOKEN
+WEBHOOK_URL = WEBHOOK_HOST + WEBHOOK_URL_PATH
+
 GREETINGS = "Привет! Отправь мне музыкальный файл в формате mp3, и я из него сделаю видео-мем с маленьким йодой из сериала Мандалорец (P.S. находится пока в стадии бета!)"
 
 @dp.message_handler(commands=['start'])
@@ -38,16 +47,27 @@ async def process_help_command(message: types.Message):
 
 @dp.message_handler(content_types=types.ContentTypes.AUDIO)
 async def process_audio(message: types.Message):
-    filename = uuid.uuid4().hex + '.mp3'
-    destination = DESTINATION_USER_AUDIO + filename
-    await bot.send_message(message.from_user.id, 'Видео обрабатывается...')
-    await message.audio.download(destination=destination)
-    async with YodaVideoProcessing(destination) as yvp:
-        output_path = await yvp.pipeline()
-        with open(output_path, 'rb') as video:
-            await bot.send_video(message.from_user.id, video)
-    os.remove(destination)
+    try:
+        filename = uuid.uuid4().hex + '.mp3'
+        destination = DESTINATION_USER_AUDIO + filename
+        await bot.send_message(message.from_user.id, 'Видео обрабатывается...')
+        await message.audio.download(destination=destination)
+        async with YodaVideoProcessing(destination) as yvp:
+            output_path = await yvp.pipeline()
+            with open(output_path, 'rb') as video:
+                await bot.send_video(message.from_user.id, video)
+        os.remove(destination)
+    except Exception as e:
+        await bot.send_message(message.from_user.id, f'🤒 соррии что-то пошло не так, вышлите это админу: {e}')
 
+async def on_startup(app):
+    """Simple hook for aiohttp application which manages webhook"""
+    await bot.delete_webhook()
+    await bot.set_webhook(WEBHOOK_URL)
 
 if __name__ == '__main__':
-    executor.start_polling(dp)
+    app = get_new_configured_app(dispatcher=dp, path=WEBHOOK_URL_PATH)
+    app.on_startup.append(on_startup)
+    dp.loop.set_task_factory(context.task_factory)
+    web.run_app(app, host='0.0.0.0', port=os.getenv('PORT'))  # Heroku stores port you have to listen in your app
+    # executor.start_polling(dp)
