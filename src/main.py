@@ -80,11 +80,11 @@ async def on_shutdown(dp):
 if __name__ == '__main__':
     start_webhook(
         dispatcher=dp,
-        webhook_path=WEBHOOK_URL,
+        webhook_path=WEBHOOK_URL_PATH,
         on_startup=on_startup,
         on_shutdown=on_shutdown,
         skip_updates=True,
-        host='0.0.0.0',
+        host=WEBHOOK_HOST,
         port=int(os.environ['PORT'])
     )
 
