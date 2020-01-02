@@ -85,7 +85,7 @@ if __name__ == '__main__':
         on_shutdown=on_shutdown,
         skip_updates=True,
         host='0.0.0.0',
-        port=os.getenv('PORT'),
+        port=int(os.environ['PORT'])
     )
 
     # executor.start_polling(dp)
