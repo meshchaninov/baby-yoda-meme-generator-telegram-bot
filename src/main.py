@@ -6,7 +6,6 @@ from aiohttp import BasicAuth
 from aiohttp import web
 import aiogram.types
 import uuid
-from aiogram.utils import context
 from aiogram.utils.executor import start_webhook
 from aiogram.dispatcher.webhook import get_new_configured_app
 from video_processing import YodaVideoProcessing
