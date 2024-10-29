@@ -1,9 +1,0 @@
-version: '3.7'
-
-services:
-  web:
-    build: .
-    command: python /app/src/main.py
-    expose:
-      - 80
-    restart: always
