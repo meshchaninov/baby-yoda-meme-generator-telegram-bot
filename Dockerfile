@@ -19,3 +19,6 @@ RUN pip install -r requirements.txt
 RUN apk del build-deps
 
 COPY src /app/src
+
+EXPOSE 80
+CMD ["python", "/app/src/main.py"]
