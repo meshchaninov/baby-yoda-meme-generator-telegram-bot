@@ -4,7 +4,6 @@ from aiogram.dispatcher import Dispatcher
 from aiogram.utils import executor
 from aiohttp import BasicAuth
 import aiogram.types
-import uuidexe
 from aiogram.dispatcher.webhook import get_new_configured_app
 from video_processing import YodaVideoProcessing
 
