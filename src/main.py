@@ -3,10 +3,8 @@ from aiogram import Bot, types
 from aiogram.dispatcher import Dispatcher
 from aiogram.utils import executor
 from aiohttp import BasicAuth
-from aiohttp import web
 import aiogram.types
-import uuid
-from aiogram.utils.executor import start_webhook
+import uuidexe
 from aiogram.dispatcher.webhook import get_new_configured_app
 from video_processing import YodaVideoProcessing
 
@@ -27,12 +25,6 @@ if PROXY_URL:
 else:
     bot = Bot(token=TOKEN)
 dp = Dispatcher(bot)
-
-PROJECT_NAME = os.environ['PROJECT_NAME']  # Set it as you've set TOKEN env var
-
-WEBHOOK_HOST = f'https://{PROJECT_NAME}.herokuapp.com'  # Enter here your link from Heroku project settings
-WEBHOOK_URL_PATH = '/webhook/' + TOKEN
-WEBHOOK_URL = WEBHOOK_HOST + WEBHOOK_URL_PATH
 
 GREETINGS = "Привет! Отправь мне музыкальный файл в формате mp3, и я из него сделаю видео-мем с маленьким йодой из сериала Мандалорец (P.S. находится пока в стадии бета!)"
 
@@ -67,7 +59,4 @@ async def on_startup(dp):
 
 
 if __name__ == '__main__':
-    app = get_new_configured_app(dispatcher=dp, path=WEBHOOK_URL_PATH)
-    app.on_startup.append(on_startup)
-    web.run_app(app, host='0.0.0.0', port=os.getenv('PORT'))  # Heroku stores port you have to listen in your app
-    # executor.start_polling(dp)
+    executor.start_polling(dp, skip_updated=True)
